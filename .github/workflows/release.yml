@@ -7,10 +7,11 @@ on:
 
 jobs:
   build_artifact:
-    matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-        ghc: ["8.8.4"]
-        cabal: ["3.2"]
+    strategy:
+      matrix:
+          os: [ubuntu-latest, macOS-latest, windows-latest]
+          ghc: ["8.8.4"]
+          cabal: ["3.2"]
 
     runs-on: ${{ matrix.os }}
 

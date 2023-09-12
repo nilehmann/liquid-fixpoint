@@ -29,7 +29,9 @@ jobs:
       - name: Setup z3-${{ matrix.z3 }}
         uses: cda-tum/setup-z3@v1.1.1
         with:
-          version: ${{ matrix.z3 }}
+          version: ${{ matrix.z3 }}        
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Freeze
         run: |

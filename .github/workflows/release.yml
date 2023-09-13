@@ -31,6 +31,10 @@ jobs:
           ghc-version: ${{ matrix.ghc }}
           cabal-version: ${{ matrix.cabal }}
 
+      # We don't want default +link-z3-as-a-library
+      - name: Remove cabal.project
+        run: rm cabal.project
+
       # - name: Setup z3-${{ matrix.z3 }}
       #   uses: cda-tum/setup-z3@v1.1.1
       #   with:

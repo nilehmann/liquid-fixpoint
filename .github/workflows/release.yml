@@ -3,46 +3,74 @@ name: Build and release
 on:
   pull_request:
     branches: [ "develop" ]
-
+    
+env:
+  ACTIONS_RUNNER_DEBUG: true
+  
 jobs:
   build_artifact:
-    matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-        ghc: ["8.8.4"]
-        cabal: ["3.2"]
+    strategy:
+      matrix:
+          #os: [ubuntu-latest, macOS-latest, windows-latest]
+          os: [macOS-latest]
+
+          ghc: ["9.2.3"]
+          cabal: ["3.6"]
+          z3: ["4.10.2"]
 
     runs-on: ${{ matrix.os }}
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+    
       - name: Setup GHC and cabal-install
         uses: haskell/actions/setup@v2
+        id: setup-haskell-cabal
         with:
           ghc-version: ${{ matrix.ghc }}
           cabal-version: ${{ matrix.cabal }}
+
+      # We don't want default +link-z3-as-a-library
+      - name: Remove cabal.project
+        run: rm cabal.project
+
+      # - name: Setup z3-${{ matrix.z3 }}
+      #   uses: cda-tum/setup-z3@v1.1.1
+      #   with:
+      #     version: ${{ matrix.z3 }}        
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Freeze
+      #   run: |
+      #     cabal freeze
           
-      - name: Freeze
-        run: |
-          cabal freeze
-    
-      - name: Cache ~/.cabal/store
-        uses: actions/cache@v3.2.3
-        with:
-          path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-          key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
+      # - name: Cache ~/.cabal/store
+      #   uses: actions/cache@v3.2.3
+      #   with:
+      #     path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
+      #     key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
 
       - name: Build binary
         run: |
           mkdir dist
-          cabal install exe:fixpoint --install-method=copy --overwrite-policy=always --installdir=dist --enable-split-sections
+          cabal install exe:fixpoint \
+              --install-method=copy \
+              --overwrite-policy=always \
+              --installdir=dist \
+              --enable-split-sections \
+              --flags=""
       
       - if: matrix.os == 'windows-latest'
         name: Set extension to .exe on Windows
-        run: echo "::set-env name=EXT::.exe"
+        run: echo "EXT=.exe" >> "$GITHUB_ENV"
 
       - name: Set binary path name
-        run: echo "::set-env name=BINARY_PATH::./dist/stan${{ env.EXT }}"
+        run: echo "BINARY_PATH=./dist/stan${{ env.EXT }}" >> "$GITHUB_ENV"
 
-      - name: Compress binary
-        uses: svenstaro/upx-action@2.0.1
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v1
         with:
-          file: ${{ env.BINARY_PATH }}
+          name: dist-${{ matrix.os }}
+          path: ./dist

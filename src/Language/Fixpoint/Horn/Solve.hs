@@ -15,8 +15,7 @@ import qualified Language.Fixpoint.Parse        as Parse
 import qualified Language.Fixpoint.Types        as F
 import qualified Language.Fixpoint.Types.Config as F
 import qualified Language.Fixpoint.Horn.Types   as H
-
-import qualified Language.Fixpoint.Horn.SMTParse   as SH
+import qualified Language.Fixpoint.Horn.Parse   as H
 
 import qualified Language.Fixpoint.Horn.Transformations as Tx
 import Text.PrettyPrint.HughesPJ.Compat ( render )
@@ -46,9 +45,9 @@ solveHorn baseCfg0 = do
 
 parseQuery :: F.Config -> IO H.TagQuery
 parseQuery cfg
-  | F.stdin cfg = Parse.parseFromStdIn SH.hornP
+  | F.stdin cfg = Parse.parseFromStdIn H.hornP
   | json        = loadFromJSON file
-  | otherwise   = Parse.parseFromFile SH.hornP file
+  | otherwise   = Parse.parseFromFile H.hornP file
   where
     json  = Files.isExtFile Files.Json file
     file  = F.srcFile cfg
